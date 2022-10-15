@@ -30,6 +30,23 @@ class Analyzer:
             raise FileNotFoundError("Can't find Rocket League's log files.")
 
     @property
+    def log(self) -> str:
+        '''Get the current log file name.'''
+        return self.__log
+
+    @log.setter
+    def log(self, value: str):
+        '''
+        Set the current log file name.
+
+        Args:
+            value (str): The new log file name.
+        '''
+        if not os.path.exists(os.path.join(self.__path, value)):
+            raise FileNotFoundError("Can't find the log file.")
+        self.__log = value
+
+    @property
     def __get_log(self) -> list[str]:
         '''
         Gets a log file.
