@@ -24,4 +24,4 @@ class Player:
 
     def __str__(self):
         '''Returns the string representation of the Player class.'''
-        return f'Player {self.name}, {self.platform_id}, {self.login_status}, {self.in_party}, {self.platform}'
+        return self.__repr__()
