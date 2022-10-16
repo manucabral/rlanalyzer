@@ -24,12 +24,16 @@ from rlanalyzer import Analyzer
 
 analyzer = Analyzer()
 ```
-Get some information
+Let's get some info
 ```py
-print(analyzer.game)
+print(analyzer.platform)
+print(analyzer.version)
+print(analyzer.game_running)
+print(analyzer.gameclass)
 print(analyzer.map)
-print(analyzer.running)
 print(analyzer.freeplay)
+print(analyzer.in_party)
+print(analyzer.party_leader)
 ```
 Get current player
 ```py
