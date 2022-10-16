@@ -7,11 +7,13 @@
 class Player:
     '''Player class core.'''
 
-    def __init__(self, id_: str, name: str, platform: str):
+    def __init__(self, **kwargs):
         '''Initialize the Player class.'''
-        self.platform_id = id_
-        self.name = name
-        self.platform = platform
+        self.name = kwargs.get('PlayerName', 'Unknown')
+        self.platform_id = kwargs.get('PlatformID', 'Unknown')
+        self.login_status = kwargs.get('LoginStatus', 'Unknown')
+        self.in_party = kwargs.get('IsInParty', 'Unknown') == 'True'
+        self.platform = kwargs.get('Platform', 'Unknown')
         # TODO: Implement scraping for the player's stats.
         self.stats = {}
         self.rank = {}
@@ -22,4 +24,4 @@ class Player:
 
     def __str__(self):
         '''Returns the string representation of the Player class.'''
-        return self.__repr__()
+        return f'Player {self.name}, {self.platform_id}, {self.login_status}, {self.in_party}, {self.platform}'

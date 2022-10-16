@@ -1,10 +1,17 @@
-'''This module contains all utility functions for RLAnalyzer.'''
+'''
+    This module contains all utilities used by the library.
+    Note: This module is not intended to be used by the user.
+'''
 
 
 class Utils:
-    '''Utilities class core.'''
+    '''Utils class core.'''
+
     LOG_PATH = '~/Documents/My Games/Rocket League/TAGame/Logs'
-    PLATFORM = ['Epic Games', 'Steam']
+    LAST_LOG_FILE = 'Launch.log'
+    PLATFORMS = r'Steam|Epic|PS4|XboxOne'
+
+    # No include news game modes, only classic modes.
     GAME_CLASS = {
         'TAGame.GameInfo_Soccar_TA': 'Soccar',
         'TAGame.GameInfo_Items_TA': 'Rumble',
@@ -14,33 +21,60 @@ class Utils:
     }
 
     @staticmethod
-    def detect_platform(data: str) -> str:
+    def last_line(lines: list[str], token: str = None) -> str:
         '''
-        Detects the platform from a string.
+        Get the last line that contains the token.
 
-        Params:
-            data (str): String to detect the platform from.
+        Args:
+            lines (list[str]): A list of lines.
+            token (str): A token to search for.
         Returns:
-            str: The detected platform. If the platform is not detected returns 'Unknown'.
+            str: The last line that contains the token or None.
         '''
-        for platform in Utils.PLATFORM:
-            if platform in data:
-                return platform
-        return 'Unknown'
+        if token is None:
+            return lines[-1]
+        for line in reversed(lines):
+            if token in line:
+                return line
+        return None
 
     @staticmethod
-    def detect_game(data: str) -> str:
+    def find_lines(lines: list[str], token: str) -> list[str]:
         '''
-        Detects the game class from a string.
+        Find all lines that contains the token.
 
-        Params:
-            data (str): String to detect the game class from.
+        Args:
+            lines (list[str]): A list of lines.
+            token (str): A token to search for.
         Returns:
-            str: The detected game class. If the game class is not detected returns 'Menu'.
+            list[str]: A list of lines that contains the token.
         '''
-        data = data.split('?')
-        for param in data:
-            if 'game' in param:
-                game = param.split('=')[1]
-                return Utils.GAME_CLASS.get(game, 'Unknown')
-        return 'Menu'
+        return [line for line in lines if token in line]
+
+    @staticmethod
+    def get_game_class(class_name: str) -> str:
+        '''
+        Get the game class name.
+
+        Args:
+            class_name (str): The game class name.
+        Returns:
+            str: The game name.
+        '''
+        return Utils.GAME_CLASS[class_name]
+
+    @staticmethod
+    def parse_playerid(player_id: str) -> dict:
+        '''
+        Parse the player ID.
+
+        Args:
+            player_id (str): The player ID.
+        Returns:
+            dict: A dictionary with the player ID.
+        '''
+        player_id = player_id.split('|')
+        return {
+            'Platform': player_id[0],
+            'PlatformID': player_id[1],
+        }
