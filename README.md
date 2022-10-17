@@ -42,10 +42,10 @@ print(player.name, player.platform, player.platform_id)
 Get current party
 ```py
 party = analyzer.party
-print('party id', party.party_id)
-print('party size', party.size)
-print('party leader', party.leader)
-print('party members', party.members())
+print(party.party_id)
+print(party.size)
+print(party.leader)
+print(party.members())
 ```
 
 ### Constributions
