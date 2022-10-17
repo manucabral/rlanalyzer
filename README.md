@@ -33,12 +33,19 @@ print(analyzer.gameclass)
 print(analyzer.map)
 print(analyzer.freeplay)
 print(analyzer.in_party)
-print(analyzer.party_leader)
 ```
 Get current player
 ```py
 player = analyzer.player
 print(player.name, player.platform, player.platform_id)
+```
+Get current party
+```py
+party = analyzer.party
+print('party id', party.party_id)
+print('party size', party.size)
+print('party leader', party.leader)
+print('party members', party.members())
 ```
 
 ### Constributions

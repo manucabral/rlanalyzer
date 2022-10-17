@@ -20,7 +20,7 @@ class Player:
 
     def __repr__(self):
         '''Returns the representation of the Player class.'''
-        return f'<Player {self.name}>'
+        return f'<Player {self.platform_id}>'
 
     def __str__(self):
         '''Returns the string representation of the Player class.'''

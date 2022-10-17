@@ -10,14 +10,15 @@ import os
 import re
 import sys
 
+from .utils import Utils
+from .player import Player
+from .party import Party
+
 if sys.version_info < (3, 6):
     raise RuntimeError('Python 3.6 or higher is required.')
 
 if sys.platform != 'win32':
     raise RuntimeError('Windows is required to run this library.')
-
-from .utils import Utils
-from .player import Player
 
 
 class Analyzer:
@@ -101,7 +102,7 @@ class Analyzer:
             with open(self.path, 'r', encoding='utf-8', errors='ignore') as file:
                 return file.read().splitlines()
         except Exception as exc:
-            raise RuntimeError(f'Unable to read the log file: {exc}')
+            raise RuntimeError(f'Unable to read the log file: {exc}') from exc
 
     def __load_map(self) -> str:
         '''
@@ -130,14 +131,18 @@ class Analyzer:
         return {**status, **parsed_playerid}
 
     @property
-    def player(self) -> Player:
+    def __lobby_member_status(self) -> list[dict]:
         '''
-        Get the player object.
+        Get all lobby members status.
 
         Returns:
-            Player: The player.
+            list[dict]: The lobby members status.
         '''
-        return Player(**self.__player_status)
+        log = self.__read()
+        statuses = Utils.find_lines(log, 'HandleLobbyMemberStatusUpdate')
+        parsed_statuses = re.findall(re.compile(
+            r'(\w*)=(\".*?\"|\S*)'), '\n'.join(statuses))
+        return [dict(parsed_statuses[i:i + 4]) for i in range(0, len(parsed_statuses), 4)]
 
     @property
     def in_party(self) -> bool:
@@ -147,20 +152,16 @@ class Analyzer:
         Returns:
             bool: True if the player is in a party, False otherwise.
         '''
-        return self.__player_status['IsInParty'] == 'True'
+        last_member_status = self.__lobby_member_status[-1]
+        status = last_member_status['Status']
+        # if the last status if left, the player is not in a party/lobby.
+        return status != 'Left'
 
-    def party_members(self) -> list[Player]:
-        '''
-        TODO: Get the party members.
-
-        Returns:
-            list[Player]: The party members.
-        '''
-
-    @property
+    @ property
     def party_leader(self) -> Player:
         '''
         Get the party player leader.
+        Separate function because that info is not in HandleLobbyMemberStatusUpdate.
 
         Returns:
             str: The party leader name.
@@ -174,6 +175,28 @@ class Analyzer:
         return Player(**parsed, IsInParty='True')
 
     @property
+    def party(self) -> Party:
+        '''
+        Get the party where the player is in.
+
+        Returns:
+            Party: The party object.
+        '''
+        if not self.in_party:
+            return None
+        return Party(party_data=self.__lobby_member_status, party_leader=self.party_leader)
+
+    @property
+    def player(self) -> Player:
+        '''
+        Get the player object.
+
+        Returns:
+            Player: The player.
+        '''
+        return Player(**self.__player_status)
+
+    @ property
     def game_running(self) -> bool:
         '''
         Check if Rocket League is running.
@@ -185,7 +208,7 @@ class Analyzer:
         last_line = Utils.last_line(log)
         return 'Log file closed' not in last_line
 
-    @property
+    @ property
     def platform(self) -> str:
         '''
         Get the platform used to play Rocket League.
@@ -197,7 +220,7 @@ class Analyzer:
         line = Utils.last_line(log, 'Base directory')
         return re.findall(Utils.PLATFORMS, line)[0]
 
-    @property
+    @ property
     def map(self) -> str:
         '''
         Get the last map loaded.
@@ -211,7 +234,7 @@ class Analyzer:
             return param.split('/')[-1]
         return param
 
-    @property
+    @ property
     def gameclass(self) -> str:
         '''
         Get the last game class loaded (e.g. 'Soccer', 'Hoops', etc.)
@@ -220,10 +243,12 @@ class Analyzer:
             str: The game class name.
         '''
         last_map = self.__load_map()
-        game = re.findall('game=(.*)', last_map)[0]
-        return Utils.get_game_class(game)
+        if 'MENU' in last_map:
+            return None
+        game = re.findall(r'(Game|game)=([^?]*)', last_map)[0]
+        return Utils.get_game_class(game[1])
 
-    @property
+    @ property
     def freeplay(self) -> bool:
         '''
         Check if the last map loaded is in Freeplay.
@@ -234,7 +259,7 @@ class Analyzer:
         last_map = self.__load_map()
         return 'Freeplay' in last_map
 
-    @property
+    @ property
     def version(self) -> str:
         '''
         Get the Rocket League build version.
