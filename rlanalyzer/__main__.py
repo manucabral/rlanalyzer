@@ -153,6 +153,9 @@ class Analyzer:
             bool: True if the player is in a party, False otherwise.
         '''
         last_member_status = self.__lobby_member_status[-1]
+        if not 'Status' in last_member_status:
+            # Probably changes the platform and the log file is not updated
+            return False
         status = last_member_status['Status']
         # if the last status if left, the player is not in a party/lobby.
         return status != 'Left'
