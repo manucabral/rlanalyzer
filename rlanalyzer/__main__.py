@@ -140,8 +140,8 @@ class Analyzer:
         '''
         log = self.__read()
         statuses = Utils.find_lines(log, 'HandleLobbyMemberStatusUpdate')
-        parsed_statuses = re.findall(re.compile(
-            r'(\w*)=(\".*?\"|\S*)'), '\n'.join(statuses))
+        parsed_statuses = re.findall(
+            r'(\w*)=(\".*?\"|\S*)', '\n'.join(statuses))
         return [dict(parsed_statuses[i:i + 4]) for i in range(0, len(parsed_statuses), 4)]
 
     @property
@@ -152,13 +152,17 @@ class Analyzer:
         Returns:
             bool: True if the player is in a party, False otherwise.
         '''
-        last_member_status = self.__lobby_member_status[-1]
-        if not 'Status' in last_member_status:
-            # Probably changes the platform and the log file is not updated
+        statuses = self.__lobby_member_status
+        if not self.game_running:
             return False
-        status = last_member_status['Status']
-        # if the last status if left, the player is not in a party/lobby.
-        return status != 'Left'
+        if len(statuses) == 0:
+            # Maybe Rocket League is starting or not lobby is created.
+            return False
+        last_member_status = statuses[-1]
+        print(last_member_status)
+        index = last_member_status['MemberIndex']
+        # if the member index is -1, the player is not in a party
+        return index != '-1'
 
     @ property
     def party_leader(self) -> Player:
@@ -169,10 +173,15 @@ class Analyzer:
         Returns:
             str: The party leader name.
         '''
+        if not self.game_running:
+            return None
         lines = self.__read()
         if not self.in_party:
             return None
         line = Utils.last_line(lines, 'OnPartyLeaderChanged')
+        if not line:
+            # Maybe the player is the party leader
+            return self.player
         leader = dict(re.findall(r'(\w*)=(\".*?\"|\S*)', line))
         parsed = Utils.parse_playerid(leader['NewLeader'])
         return Player(**parsed, IsInParty='True')
@@ -182,9 +191,14 @@ class Analyzer:
         '''
         Get the party where the player is in.
 
+        Raises:
+            RuntimeError: If the player is not in a party.
         Returns:
             Party: The party object.
         '''
+        if not self.game_running:
+            raise RuntimeError(
+                "Can't get the party if the game is not running.")
         if not self.in_party:
             return None
         return Party(party_data=self.__lobby_member_status, party_leader=self.party_leader)
