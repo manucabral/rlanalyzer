@@ -7,8 +7,8 @@ This library is not affiliated with Psyonix, Inc.
 ### Features
 - Extract current log information
 - Extract another log stored
+- Extract player data
 - Detects maps, game class, and more
-- Gets player data
 - Detects platform (Epic or Steam)
 
 ### Installation
